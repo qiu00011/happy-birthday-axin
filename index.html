@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>To: 阿欣</title>
     <style>
-        /* --- 全局与字体 --- */
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Ma+Shan+Zheng&display=swap');
 
         :root {
@@ -14,25 +13,28 @@
             --space-bg: #050505;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
         body {
             background-color: var(--space-bg);
-            overflow: hidden;
             font-family: 'Cinzel', serif;
             height: 100vh;
             width: 100vw;
             color: white;
             transition: background 1.5s ease-in-out;
+            overflow: hidden; /* 初始锁定滚动 */
             user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
         }
 
-        /* --- 动画工具 --- */
-        .hidden { opacity: 0; pointer-events: none; transition: opacity 1s ease; }
+        /* 动画类 */
+        .hidden { opacity: 0; pointer-events: none; transition: opacity 0.8s ease; }
         .fade-in { animation: fadeIn 1.5s forwards; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes shake { 0%, 100% { transform: translate(-50%, -50%) translateX(0); } 25% { transform: translate(-50%, -50%) translateX(-5px); } 75% { transform: translate(-50%, -50%) translateX(5px); } }
 
-        /* --- 场景1：高级倒计时 --- */
+        /* 场景1：倒计时 */
         #scene-countdown {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -41,133 +43,119 @@
             justify-content: center;
             align-items: center;
             z-index: 100;
-            background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+            background: radial-gradient(circle at center, #1b2735 0%, #090a0f 100%);
         }
 
         .stars-bg {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: url('https://www.script-tutorials.com/demos/360/images/stars.png') repeat top center;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, #eee, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 40px 70px, #fff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 50px 160px, #ddd, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 90px 40px, #fff, rgba(0,0,0,0));
+            background-repeat: repeat;
+            background-size: 200px 200px;
             z-index: -1;
-            opacity: 0.5;
-            animation: moveStars 200s linear infinite;
+            opacity: 0.3;
+            animation: twinkle 5s infinite;
         }
-        @keyframes moveStars { from {background-position:0 0;} to {background-position:-10000px 5000px;} }
-
-        .countdown-wrapper {
-            text-align: center;
-            position: relative;
-            z-index: 2;
-        }
-
-        .countdown-title {
-            font-size: 1.2rem;
-            letter-spacing: 5px;
-            color: #8fa1b3;
-            margin-bottom: 20px;
-            text-transform: uppercase;
-        }
+        @keyframes twinkle { 50% { opacity: 0.6; } }
 
         .timer-main {
-            font-size: 3.5rem;
+            font-size: 12vw; /* 响应式字体 */
             background: linear-gradient(to bottom, #fff, #999);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             font-weight: 700;
-            letter-spacing: 2px;
-            filter: drop-shadow(0 0 15px rgba(255,255,255,0.3));
-            margin-bottom: 10px;
+            filter: drop-shadow(0 0 10px rgba(255,255,255,0.3));
         }
+        @media (min-width: 768px) { .timer-main { font-size: 5rem; } }
 
-        .timer-sub {
-            font-size: 1rem;
-            color: #666;
-            letter-spacing: 3px;
-        }
-
-        /* --- 场景2：天蝎座连线 (20星) --- */
+        /* 场景2：天蝎座连线 */
         #scene-constellation {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             z-index: 90;
             display: none;
-            background: radial-gradient(circle at center, #1a0b14 0%, #000 100%);
+            background: radial-gradient(circle at center, #150a10 0%, #000 100%);
         }
 
         .game-area {
             position: relative;
             width: 100%;
             height: 100%;
-            max-width: 600px;
+            max-width: 600px; /* 限制最大宽度，保证在PC上也好点 */
             margin: 0 auto;
         }
 
         .guide-text {
             position: absolute;
-            top: 10%;
+            top: 15%;
             width: 100%;
             text-align: center;
             color: var(--primary);
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             text-shadow: 0 0 10px var(--primary);
-            animation: pulse 2s infinite;
             pointer-events: none;
+            z-index: 20;
         }
 
         .c-star {
             position: absolute;
-            width: 12px;
-            height: 12px;
-            background: white;
-            border-radius: 50%;
+            width: 20px; /* 加大触控区域 */
+            height: 20px;
+            background: transparent; 
             transform: translate(-50%, -50%);
             cursor: pointer;
-            transition: all 0.3s;
-            opacity: 0.3;
-            box-shadow: 0 0 5px rgba(255,255,255,0.5);
+            z-index: 10; /* 保证在连线之上 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
-        /* 增大点击区域 */
-        .c-star::after {
+        /* 星星的视觉中心点 */
+        .c-star::before {
             content: '';
-            position: absolute;
-            top: -20px; left: -20px; right: -20px; bottom: -20px;
+            width: 8px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            transition: all 0.3s;
+            box-shadow: 0 0 5px rgba(255,255,255,0.3);
         }
 
-        .c-star.active {
-            opacity: 1;
+        /* 待点击状态 */
+        .c-star.active::before {
             background: var(--gold);
-            box-shadow: 0 0 15px var(--gold), 0 0 30px var(--gold);
-            animation: starPulse 1s infinite alternate;
-            z-index: 10;
-            transform: translate(-50%, -50%) scale(1.5);
+            width: 12px; height: 12px;
+            box-shadow: 0 0 15px var(--gold);
+            animation: pulseStar 1s infinite alternate;
         }
 
-        .c-star.done {
-            opacity: 1;
+        /* 已点亮状态 */
+        .c-star.done::before {
             background: var(--primary);
+            width: 10px; height: 10px;
             box-shadow: 0 0 10px var(--primary);
-            animation: none;
-            transform: translate(-50%, -50%) scale(1);
         }
+
+        /* 错误震动 */
+        .c-star.shake { animation: shake 0.4s ease-in-out; }
 
         .c-line {
             position: absolute;
             height: 2px;
             background: linear-gradient(90deg, var(--gold), var(--primary));
             transform-origin: left center;
-            opacity: 0;
-            transition: opacity 1s ease;
-            box-shadow: 0 0 8px var(--primary);
-            z-index: 1;
+            z-index: 1; /* 线在最底层 */
+            box-shadow: 0 0 5px var(--primary);
+            pointer-events: none; /* 防止线挡住点击 */
         }
 
-        @keyframes starPulse { 
-            0% { transform: translate(-50%, -50%) scale(1.2); } 
-            100% { transform: translate(-50%, -50%) scale(1.8); } 
-        }
+        @keyframes pulseStar { 0% { transform: scale(1); } 100% { transform: scale(1.5); } }
 
-        /* --- 场景3：心跳解锁 --- */
+        /* 场景3：心跳解锁 */
         #scene-unlock {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -179,136 +167,138 @@
             background: #000;
         }
 
-        .heart-trigger {
-            font-size: 80px;
-            cursor: pointer;
-            user-select: none;
+        .heart-wrapper {
             position: relative;
+            width: 100px;
+            height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             z-index: 10;
-            transition: transform 0.1s;
-            filter: drop-shadow(0 0 0px var(--primary));
         }
 
-        .unlock-hint {
-            margin-top: 30px;
-            color: rgba(255,255,255,0.5);
-            font-size: 14px;
-            animation: fadeInUp 2s infinite;
+        .heart-trigger {
+            font-size: 60px;
+            cursor: pointer;
+            position: relative;
+            z-index: 11;
+            /* 防止长按弹出菜单的关键 CSS */
+            -webkit-touch-callout: none;
+            user-select: none;
         }
 
-        .energy-circle {
+        .energy-ring {
             position: absolute;
-            width: 120px;
-            height: 120px;
-            border: 2px solid var(--primary);
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.5);
+            width: 200px; height: 200px;
             border-radius: 50%;
+            border: 2px solid rgba(255, 105, 180, 0.5);
             opacity: 0;
-            transform: scale(0.8);
+            pointer-events: none;
         }
 
-        /* --- 场景4：信件内容 --- */
+        /* 场景4：信件 */
         #scene-letter {
             position: relative;
             width: 100%;
             min-height: 100vh;
             display: none;
-            background: linear-gradient(135deg, #fff0f5 0%, #ffe4e1 100%);
-            overflow-y: auto;
+            background: linear-gradient(180deg, #fff0f5 0%, #ffe4e1 100%);
             color: #5d3a3a;
-            padding: 20px;
-            font-family: 'Ma Shan Zheng', cursive; /* 使用手写体 */
+            font-family: 'Ma Shan Zheng', cursive;
+            padding-bottom: 50px;
         }
 
         .paper {
-            background: rgba(255, 255, 255, 0.95);
+            width: 90%;
             max-width: 800px;
-            margin: 40px auto;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(255, 105, 180, 0.2);
-            line-height: 2;
+            margin: 20px auto;
+            background: rgba(255,255,255,0.9);
+            padding: 30px 20px;
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            line-height: 1.8;
             font-size: 18px;
-            position: relative;
             opacity: 0;
             transform: translateY(30px);
             transition: all 1s ease;
         }
-        
         .paper.show { opacity: 1; transform: translateY(0); }
 
         .paper-title {
             text-align: center;
-            font-size: 28px;
+            font-size: 24px;
             color: #d63384;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
             border-bottom: 2px dashed #ffb6c1;
-            padding-bottom: 15px;
         }
 
-        /* 装饰飘落 */
+        /* 飘落爱心 */
         .rain-heart {
             position: fixed;
             pointer-events: none;
-            z-index: 999;
-            top: 110%;
+            z-index: 9999;
             animation: floatUp linear forwards;
+            bottom: -50px;
         }
-        @keyframes floatUp { to { transform: translateY(-120vh) rotate(360deg); opacity: 0; } }
-        @keyframes fadeInUp { 0% {opacity:0; transform:translateY(10px);} 100%{opacity:1; transform:translateY(0);} }
+        @keyframes floatUp { to { transform: translateY(-110vh) rotate(360deg); opacity: 0; } }
 
         /* 音乐按钮 */
         #music-btn {
             position: fixed;
             top: 20px; right: 20px;
             z-index: 200;
-            width: 40px; height: 40px;
+            font-size: 24px;
             background: rgba(255,255,255,0.2);
+            width: 40px; height: 40px;
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
             backdrop-filter: blur(5px);
             cursor: pointer;
-            border: 1px solid rgba(255,255,255,0.3);
         }
     </style>
 </head>
-<body>
+<!-- 禁用右键防止弹出菜单 -->
+<body oncontextmenu="return false;">
 
-    <audio id="bg-music" src="bgmusic.mp3" loop></audio>
-    <div id="music-btn">🎵</div>
+    <audio id="bg-music" src="bgmusic.mp3" loop preload="auto"></audio>
+    <div id="music-btn">🔇</div>
 
     <!-- 1. 倒计时 -->
     <div id="scene-countdown">
         <div class="stars-bg"></div>
-        <div class="countdown-wrapper">
-            <div class="countdown-title">Sealed Until</div>
-            <div class="timer-main" id="timer-val">2025.12.10</div>
-            <div class="timer-sub">等待那个时刻的到来...</div>
+        <div style="text-align:center;">
+            <div style="color:#888; letter-spacing:3px; margin-bottom:10px;">SEALED UNTIL</div>
+            <div class="timer-main" id="timer-val">Wait...</div>
+            <div style="color:#666; font-size:14px; margin-top:20px;">2025.12.10</div>
         </div>
     </div>
 
-    <!-- 2. 天蝎座连线 -->
+    <!-- 2. 天蝎座连线 (修复版) -->
     <div id="scene-constellation">
-        <div class="game-area" id="constellation-area">
-            <div class="guide-text">按顺序点亮属于你的星空 (0/20)</div>
-            <!-- 星星由JS生成 -->
+        <div class="game-area" id="game-area">
+            <div class="guide-text" id="guide-text">按顺序点亮天蝎座 (0/20)</div>
         </div>
     </div>
 
-    <!-- 3. 心跳解锁 -->
+    <!-- 3. 心跳解锁 (修复长按) -->
     <div id="scene-unlock">
-        <div class="heart-trigger" id="unlock-heart">🖤</div>
-        <div class="energy-circle" id="energy-circle"></div>
-        <div class="unlock-hint">长按注入爱意，会有神奇的事情发生...</div>
+        <div class="heart-wrapper">
+            <div class="heart-trigger" id="unlock-heart">🖤</div>
+            <div class="energy-ring" id="energy-ring"></div>
+        </div>
+        <div style="color:rgba(255,255,255,0.6); margin-top:30px; font-size:14px;">长按注入爱意</div>
     </div>
 
     <!-- 4. 信件 -->
     <div id="scene-letter">
         <div class="paper" id="letter-paper">
             <div class="paper-title">🌚 致——唐欣 🌚</div>
-            <div id="letter-content">
-                <!-- 原文内容保持不变 -->
+            <div class="content-body">
                 <p>亲爱的阿欣:</p>
                 <br>
                 <p>嗨～又是一年10月21日了，今天，是屬於妳的特別日子。先跟妳說聲最重要的：生日快樂🎂！</p>
@@ -344,195 +334,190 @@
                 <br>
                 <p>祝我最親愛的阿欣，生日快樂。</p>
                 
-                <div style="text-align: right; margin-top: 40px;">
+                <div style="text-align: right; margin-top: 40px; font-weight: bold;">
                     <p>💖 愛你的子怡</p>
                     <p>🌹 2025年12月10日</p>
                 </div>
                 
-                <div style="text-align: center; margin-top: 50px; font-size: 0.9em; color: #d63384;">
-                    ( 试着在键盘上长按 'L' 键... )
+                <div style="text-align: center; margin-top: 50px; font-size: 0.9em; color: #ff69b4; opacity: 0.8;">
+                    ( 在电脑上可以长按 'L' 键有惊喜哦 )
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        /* 
-           配置区 
-           测试模式：在网址后加 ?test=true 即可跳过倒计时直接看效果
-        */
+        // 配置：倒计时目标
         const TARGET_DATE = new Date('2025-12-10T00:00:00+08:00');
+        // 测试开关：网址后加 ?test=true 开启测试模式（跳过倒计时）
         const IS_TEST = new URLSearchParams(window.location.search).get('test') === 'true';
 
-        // 状态管理
         let currentScene = 1;
-        
+
         // 初始化
         function init() {
-            checkTimer();
-            setInterval(checkTimer, 1000);
-            
+            startTimer();
             // 音乐控制
-            const musicBtn = document.getElementById('music-btn');
+            const btn = document.getElementById('music-btn');
             const audio = document.getElementById('bg-music');
-            musicBtn.addEventListener('click', () => {
-                if(audio.paused) {
-                    audio.play();
-                    musicBtn.textContent = '🔊';
-                } else {
-                    audio.pause();
-                    musicBtn.textContent = '🔇';
-                }
-            });
-            // 尝试自动播放
-            document.body.addEventListener('click', () => {
-                if(audio.paused) { audio.play().catch(()=>{}); musicBtn.textContent = '🔊'; }
-            }, {once:true});
-        }
-
-        /* 场景1：倒计时逻辑 */
-        function checkTimer() {
-            if (currentScene !== 1) return;
-
-            const now = new Date();
-            const diff = TARGET_DATE - now;
-
-            if (diff <= 0 || IS_TEST) {
-                switchScene(2);
-                initConstellationGame();
-                return;
-            }
-
-            const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
-            const m = Math.floor((diff / 1000 / 60) % 60);
-            const s = Math.floor((diff / 1000) % 60);
             
-            // 更优雅的显示方式
-            document.getElementById('timer-val').innerHTML = 
-                `${d}<span style="font-size:0.4em">d</span> ${h}<span style="font-size:0.4em">h</span> ${m}<span style="font-size:0.4em">m</span> ${s}<span style="font-size:0.4em">s</span>`;
+            // 触摸页面任意位置尝试播放音乐（解决自动播放限制）
+            document.body.addEventListener('touchstart', () => {
+                if(audio.paused) { audio.play().catch(()=>{}); btn.textContent = '🔊'; }
+            }, {once:true});
+            document.body.addEventListener('click', () => {
+                if(audio.paused) { audio.play().catch(()=>{}); btn.textContent = '🔊'; }
+            }, {once:true});
+
+            btn.onclick = () => {
+                if(audio.paused) { audio.play(); btn.textContent = '🔊'; }
+                else { audio.pause(); btn.textContent = '🔇'; }
+            };
         }
 
-        function switchScene(sceneNum) {
-            currentScene = sceneNum;
+        // --- 逻辑1：倒计时 ---
+        function startTimer() {
+            const timerEl = document.getElementById('timer-val');
+            
+            const update = () => {
+                if(currentScene !== 1) return;
+                const now = new Date();
+                const diff = TARGET_DATE - now;
+
+                if (diff <= 0 || IS_TEST) {
+                    clearInterval(timerInt);
+                    changeScene(2);
+                    initGame();
+                    return;
+                }
+
+                const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+                const m = Math.floor((diff / 1000 / 60) % 60);
+                const s = Math.floor((diff / 1000) % 60);
+                timerEl.textContent = `${d}d ${h}h ${m}m ${s}s`;
+            };
+            
+            update();
+            const timerInt = setInterval(update, 1000);
+        }
+
+        function changeScene(index) {
+            currentScene = index;
             document.querySelectorAll('body > div[id^="scene-"]').forEach(el => {
                 el.classList.add('hidden');
-                setTimeout(() => el.style.display = 'none', 1000);
+                setTimeout(() => el.style.display = 'none', 800);
             });
 
-            const next = document.getElementById(
-                sceneNum === 2 ? 'scene-constellation' : 
-                sceneNum === 3 ? 'scene-unlock' : 'scene-letter'
-            );
+            const nextId = index === 2 ? 'scene-constellation' : 
+                           index === 3 ? 'scene-unlock' : 'scene-letter';
+            const nextEl = document.getElementById(nextId);
             
             setTimeout(() => {
-                next.style.display = sceneNum === 3 ? 'flex' : 'block';
-                next.classList.remove('hidden');
-                next.classList.add('fade-in');
+                nextEl.style.display = index === 3 ? 'flex' : 'block';
+                nextEl.classList.remove('hidden');
+                nextEl.classList.add('fade-in');
+                
+                // 如果是信件页面，解除滚动锁定
+                if(index === 4) {
+                    document.body.style.overflow = 'auto';
+                }
             }, 800);
         }
 
-        /* 场景2：天蝎座连线游戏 */
-        function initConstellationGame() {
-            const container = document.getElementById('constellation-area');
-            const guide = document.querySelector('.guide-text');
+        // --- 逻辑2：天蝎座连线（重写逻辑）---
+        function initGame() {
+            const area = document.getElementById('game-area');
+            const guide = document.getElementById('guide-text');
             
-            // 20颗星的相对坐标 (0-100%)，大致模拟天蝎座形状
-            const stars = [
+            // 天蝎座坐标 (百分比: x, y) - 模拟钩子形状
+            const starsPos = [
                 {x: 20, y: 30}, {x: 25, y: 35}, {x: 30, y: 40}, // 左钳
-                {x: 70, y: 25}, {x: 65, y: 30}, {x: 60, y: 35}, // 右钳
-                {x: 45, y: 45}, // 头部
-                {x: 45, y: 55}, {x: 45, y: 65}, {x: 45, y: 75}, // 身体
-                {x: 50, y: 80}, {x: 55, y: 82}, {x: 60, y: 80}, {x: 65, y: 75}, // 尾巴弯曲
-                {x: 68, y: 65}, {x: 65, y: 55}, // 尾巴上翘
-                {x: 60, y: 50}, {x: 55, y: 45}, // 毒针连接
-                {x: 50, y: 40}, {x: 45, y: 35}  // 毒针尖端
-            ];
-            
-            // 重新映射点击顺序，让其连线合理 (左钳->头->右钳->头->身->尾)
-            // 简化逻辑：直接按数组顺序连，所以我重新排列数组顺序以形成一条线
-            const orderedStars = [
-                // 左钳子开始
-                {x: 20, y: 30}, {x: 25, y: 35}, {x: 30, y: 40},
-                // 头部
-                {x: 45, y: 45},
-                // 去右钳子 (需要处理分叉，这里为了简化游戏体验，做成单笔画视觉)
-                {x: 60, y: 35}, {x: 65, y: 30}, {x: 70, y: 25},
-                // 回到身体 (视觉跳跃，或者直接连身体)
-                {x: 45, y: 55}, {x: 48, y: 62}, {x: 50, y: 70}, 
-                {x: 55, y: 75}, {x: 62, y: 78}, {x: 70, y: 75}, // 尾巴弯曲
-                {x: 75, y: 65}, {x: 72, y: 55}, {x: 65, y: 48}, // 向上翘
-                {x: 60, y: 45}, {x: 55, y: 42}, {x: 50, y: 40}, {x: 45, y: 38} // 毒针
+                {x: 45, y: 45}, // 头
+                {x: 60, y: 35}, {x: 65, y: 30}, {x: 70, y: 25}, // 右钳
+                {x: 45, y: 55}, {x: 45, y: 65}, {x: 48, y: 75}, // 脊柱
+                {x: 55, y: 80}, {x: 65, y: 78}, {x: 72, y: 70}, // 尾弯
+                {x: 75, y: 60}, {x: 70, y: 52}, {x: 65, y: 48}, // 尾刺底
+                {x: 60, y: 45}, {x: 55, y: 42}, {x: 50, y: 40}, {x: 45, y: 38} // 针尖
             ];
 
+            // 修正后的线性路径，确保玩家一个接一个点，连成一条线
+            // 这里为了游戏性，把顺序打平成一条线：左钳->头->右钳(不回溯了，直接视觉上连)->身->尾
+            // 实际点击顺序索引
             let currentIndex = 0;
 
-            orderedStars.forEach((pos, index) => {
+            starsPos.forEach((pos, idx) => {
                 const star = document.createElement('div');
                 star.className = 'c-star';
                 star.style.left = pos.x + '%';
                 star.style.top = pos.y + '%';
-                star.dataset.index = index;
+                star.dataset.index = idx;
                 
-                star.addEventListener('click', (e) => {
+                // 触摸/点击事件统一处理
+                const handleInteract = (e) => {
+                    e.preventDefault(); // 防止双击缩放等
                     e.stopPropagation();
-                    if (index === currentIndex) {
-                        handleStarClick(star, index);
+                    
+                    if (idx === currentIndex) {
+                        // 点对了
+                        star.classList.remove('active');
+                        star.classList.add('done');
+                        if(navigator.vibrate) navigator.vibrate(10);
+                        
+                        if (currentIndex > 0) {
+                            drawConnector(currentIndex - 1, currentIndex);
+                        }
+
+                        currentIndex++;
+                        guide.textContent = `星光汇聚 (${currentIndex}/20)`;
+
+                        if (currentIndex < 20) {
+                            highlightStar(currentIndex);
+                        } else {
+                            guide.textContent = "天蝎座 · 唤醒成功";
+                            setTimeout(() => {
+                                changeScene(3);
+                                initHeart();
+                            }, 1500);
+                        }
+                    } else if (idx > currentIndex) {
+                        // 点错了（还没轮到）
+                        star.classList.add('shake');
+                        if(navigator.vibrate) navigator.vibrate(50);
+                        setTimeout(() => star.classList.remove('shake'), 400);
                     }
-                });
-                container.appendChild(star);
+                };
+
+                star.addEventListener('touchstart', handleInteract, {passive: false});
+                star.addEventListener('mousedown', handleInteract);
+
+                area.appendChild(star);
             });
 
-            // 激活第一颗
-            activateStar(0);
+            highlightStar(0);
 
-            function activateStar(idx) {
-                const s = container.querySelector(`.c-star[data-index="${idx}"]`);
+            function highlightStar(i) {
+                const s = area.querySelector(`.c-star[data-index="${i}"]`);
                 if(s) s.classList.add('active');
             }
 
-            function handleStarClick(el, idx) {
-                el.classList.remove('active');
-                el.classList.add('done');
+            function drawConnector(idx1, idx2) {
+                const s1 = area.querySelector(`.c-star[data-index="${idx1}"]`);
+                const s2 = area.querySelector(`.c-star[data-index="${idx2}"]`);
                 
-                // 震动反馈
-                if(navigator.vibrate) navigator.vibrate(20);
+                // 使用 getBoundingClientRect 获取精确屏幕坐标
+                const rect1 = s1.getBoundingClientRect();
+                const rect2 = s2.getBoundingClientRect();
+                const areaRect = area.getBoundingClientRect();
 
-                // 画线
-                if (idx > 0) {
-                    const prev = orderedStars[idx-1];
-                    const curr = orderedStars[idx];
-                    drawLine(prev, curr);
-                }
+                // 相对 area 的坐标
+                const x1 = rect1.left + rect1.width/2 - areaRect.left;
+                const y1 = rect1.top + rect1.height/2 - areaRect.top;
+                const x2 = rect2.left + rect2.width/2 - areaRect.left;
+                const y2 = rect2.top + rect2.height/2 - areaRect.top;
 
-                guide.textContent = `点亮星空 (${idx+1}/20)`;
-                currentIndex++;
-
-                if (currentIndex < 20) {
-                    activateStar(currentIndex);
-                } else {
-                    guide.textContent = "天蝎座 · 唤醒成功";
-                    setTimeout(() => {
-                        switchScene(3);
-                        initHeartInteraction();
-                    }, 1500);
-                }
-            }
-
-            function drawLine(p1, p2) {
-                // 计算两点间距离和角度
-                // 注意：因为是百分比，这里简单处理，假设容器大概比例
-                // 为了准确，获取实际像素
-                const w = container.offsetWidth;
-                const h = container.offsetHeight;
-                
-                const x1 = p1.x * w / 100;
-                const y1 = p1.y * h / 100;
-                const x2 = p2.x * w / 100;
-                const y2 = p2.y * h / 100;
-
-                const length = Math.sqrt((x2-x1)**2 + (y2-y1)**2);
-                const angle = Math.atan2(y2-y1, x2-x1) * 180 / Math.PI;
+                const length = Math.hypot(x2 - x1, y2 - y1);
+                const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
 
                 const line = document.createElement('div');
                 line.className = 'c-line';
@@ -541,113 +526,88 @@
                 line.style.top = y1 + 'px';
                 line.style.transform = `rotate(${angle}deg)`;
                 
-                container.appendChild(line);
-                setTimeout(() => line.style.opacity = 1, 50);
+                area.appendChild(line);
             }
         }
 
-        /* 场景3：心跳解锁 (长按特效) */
-        function initHeartInteraction() {
-            const heartBtn = document.getElementById('unlock-heart');
-            const circle = document.getElementById('energy-circle');
-            let pressTimer;
-            let rainInterval;
+        // --- 逻辑3：心跳长按（修复手机兼容性）---
+        function initHeart() {
+            const btn = document.getElementById('unlock-heart');
+            const ring = document.getElementById('energy-ring');
+            let timer = null;
+            let rainTimer = null;
             let progress = 0;
 
-            const startPress = (e) => {
-                e.preventDefault();
-                heartBtn.textContent = '💖';
-                heartBtn.style.filter = 'drop-shadow(0 0 10px #ff69b4)';
+            const start = (e) => {
+                if(e.type === 'touchstart') e.preventDefault(); 
                 
-                // 长按时，立即开始下雨
-                createHeartRain(true); 
-                rainInterval = setInterval(() => createHeartRain(true), 100); // 频率加快
+                btn.textContent = '💖';
+                btn.style.transform = 'scale(1.2)';
+                
+                // 立即下雨
+                makeItRain(true);
+                rainTimer = setInterval(() => makeItRain(true), 150);
 
-                pressTimer = setInterval(() => {
-                    progress += 2;
-                    const scale = 1 + (progress / 50);
+                timer = setInterval(() => {
+                    progress += 4;
+                    const scale = 1 + (progress / 40);
+                    ring.style.opacity = progress / 100;
+                    ring.style.transform = `translate(-50%, -50%) scale(${scale})`;
                     
-                    heartBtn.style.transform = `scale(${scale})`;
-                    circle.style.opacity = progress / 100;
-                    circle.style.transform = `scale(${scale * 1.2})`;
-                    circle.style.boxShadow = `0 0 ${progress}px var(--primary)`;
-
                     if (progress >= 100) {
-                        clearInterval(pressTimer);
-                        clearInterval(rainInterval);
-                        completeUnlock();
+                        end(e); // 清理定时器
+                        complete();
                     }
                 }, 50);
             };
 
-            const endPress = (e) => {
-                e.preventDefault();
-                clearInterval(pressTimer);
-                clearInterval(rainInterval);
+            const end = (e) => {
+                if(timer) clearInterval(timer);
+                if(rainTimer) clearInterval(rainTimer);
+                timer = null;
                 progress = 0;
-                heartBtn.textContent = '🖤';
-                heartBtn.style.transform = 'scale(1)';
-                heartBtn.style.filter = 'none';
-                circle.style.opacity = 0;
-                circle.style.transform = 'scale(0.8)';
+                btn.textContent = '🖤';
+                btn.style.transform = 'scale(1)';
+                ring.style.opacity = 0;
+                ring.style.transform = 'translate(-50%, -50%) scale(0.5)';
             };
 
-            heartBtn.addEventListener('mousedown', startPress);
-            heartBtn.addEventListener('touchstart', startPress);
-            heartBtn.addEventListener('mouseup', endPress);
-            heartBtn.addEventListener('touchend', endPress);
-            heartBtn.addEventListener('mouseleave', endPress);
+            btn.addEventListener('touchstart', start, {passive: false});
+            btn.addEventListener('touchend', end);
+            btn.addEventListener('mousedown', start);
+            btn.addEventListener('mouseup', end);
+            btn.addEventListener('mouseleave', end);
         }
 
-        function completeUnlock() {
-            const scene = document.getElementById('scene-unlock');
-            scene.style.transition = 'all 1s ease';
-            scene.style.opacity = 0;
-            scene.style.transform = 'scale(1.5)';
-            
-            // 背景变亮
-            document.body.style.background = '#ffe4e1';
-            
+        function complete() {
+            document.body.style.backgroundColor = '#ffe4e1'; // 背景变粉
+            changeScene(4);
             setTimeout(() => {
-                switchScene(4);
                 document.getElementById('letter-paper').classList.add('show');
-                // 爆发一次大雨
-                for(let i=0; i<30; i++) setTimeout(() => createHeartRain(), i*50);
-            }, 800);
+                // 爆发爱心雨
+                for(let i=0; i<40; i++) setTimeout(makeItRain, i * 60);
+            }, 1000);
         }
 
-        /* 通用：爱心雨 */
-        function createHeartRain(isFast = false) {
-            const heart = document.createElement('div');
-            heart.className = 'rain-heart';
-            heart.innerText = ['💗','💖','💕','💘','💝'][Math.floor(Math.random()*5)];
-            heart.style.left = Math.random() * 100 + 'vw';
-            heart.style.fontSize = (Math.random() * 20 + 15) + 'px';
-            // 长按时雨下得更快
-            const duration = isFast ? (Math.random() * 1 + 1) : (Math.random() * 3 + 2);
-            heart.style.animation = `floatUp ${duration}s linear forwards`;
-            
-            document.body.appendChild(heart);
-            setTimeout(() => heart.remove(), duration * 1000);
+        // --- 逻辑4：爱心雨特效 ---
+        function makeItRain(fast = false) {
+            const h = document.createElement('div');
+            h.className = 'rain-heart';
+            h.innerText = ['💗','💖','💘','💝'][Math.floor(Math.random()*4)];
+            h.style.left = Math.random() * 100 + 'vw';
+            h.style.fontSize = (Math.random() * 20 + 15) + 'px';
+            const duration = fast ? (Math.random() * 1.5 + 1.5) : (Math.random() * 3 + 3);
+            h.style.animationDuration = duration + 's';
+            document.body.appendChild(h);
+            setTimeout(() => h.remove(), duration * 1000);
         }
 
-        /* L键彩蛋 */
-        let lKeyInterval;
+        // 键盘彩蛋
         document.addEventListener('keydown', (e) => {
-            if ((e.key === 'l' || e.key === 'L') && !lKeyInterval) {
-                createHeartRain();
-                lKeyInterval = setInterval(() => createHeartRain(), 100);
-            }
-        });
-        document.addEventListener('keyup', (e) => {
-            if (e.key === 'l' || e.key === 'L') {
-                clearInterval(lKeyInterval);
-                lKeyInterval = null;
-            }
+            if(e.key.toLowerCase() === 'l') makeItRain(true);
         });
 
         init();
-
     </script>
 </body>
 </html>
