@@ -4,35 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>To: 阿欣</title>
-    <!-- 建议替换背景音乐链接 -->
-    <link rel="preload" href="bgmusic.mp3" as="audio">
     <style>
+        /* --- 全局与字体 --- */
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Ma+Shan+Zheng&display=swap');
+
         :root {
-            --primary-color: #ff69b4;
-            --deep-bg: #0f0c29;
-            --mid-bg: #302b63;
-            --light-bg: #24243e;
-            --text-glow: 0 0 10px rgba(255, 255, 255, 0.8);
+            --primary: #ff69b4;
+            --gold: #ffd700;
+            --space-bg: #050505;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
-            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background-color: var(--space-bg);
             overflow: hidden;
-            background: linear-gradient(to bottom, var(--deep-bg), var(--mid-bg), var(--light-bg));
+            font-family: 'Cinzel', serif;
             height: 100vh;
+            width: 100vw;
             color: white;
-            transition: background 2s ease;
+            transition: background 1.5s ease-in-out;
+            user-select: none;
         }
 
-        /* --- 通用动画类 --- */
+        /* --- 动画工具 --- */
         .hidden { opacity: 0; pointer-events: none; transition: opacity 1s ease; }
-        .fade-in { animation: fadeIn 1.5s ease forwards; }
+        .fade-in { animation: fadeIn 1.5s forwards; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* --- 阶段一：倒计时 --- */
-        #stage-countdown {
+        /* --- 场景1：高级倒计时 --- */
+        #scene-countdown {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             display: flex;
@@ -40,89 +41,134 @@
             justify-content: center;
             align-items: center;
             z-index: 100;
-            background: radial-gradient(circle at center, #1b2735 0%, #090a0f 100%);
+            background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
         }
 
-        .countdown-box {
+        .stars-bg {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: url('https://www.script-tutorials.com/demos/360/images/stars.png') repeat top center;
+            z-index: -1;
+            opacity: 0.5;
+            animation: moveStars 200s linear infinite;
+        }
+        @keyframes moveStars { from {background-position:0 0;} to {background-position:-10000px 5000px;} }
+
+        .countdown-wrapper {
             text-align: center;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 40px;
-            border-radius: 20px;
-            border: 1px solid rgba(255,255,255,0.2);
-            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            position: relative;
+            z-index: 2;
         }
 
-        .timer-display {
-            font-size: 3rem;
-            font-weight: bold;
-            font-family: monospace;
-            margin: 20px 0;
-            background: linear-gradient(45deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3);
+        .countdown-title {
+            font-size: 1.2rem;
+            letter-spacing: 5px;
+            color: #8fa1b3;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .timer-main {
+            font-size: 3.5rem;
+            background: linear-gradient(to bottom, #fff, #999);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 20px rgba(255,255,255,0.1);
+            font-weight: 700;
+            letter-spacing: 2px;
+            filter: drop-shadow(0 0 15px rgba(255,255,255,0.3));
+            margin-bottom: 10px;
         }
 
-        /* --- 阶段二：收集流星 --- */
-        #stage-collect {
+        .timer-sub {
+            font-size: 1rem;
+            color: #666;
+            letter-spacing: 3px;
+        }
+
+        /* --- 场景2：天蝎座连线 (20星) --- */
+        #scene-constellation {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             z-index: 90;
-            display: none; /* JS控制显示 */
-            background: #000;
+            display: none;
+            background: radial-gradient(circle at center, #1a0b14 0%, #000 100%);
         }
-        
-        .instruction-text {
+
+        .game-area {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .guide-text {
             position: absolute;
-            top: 20%;
+            top: 10%;
             width: 100%;
             text-align: center;
-            font-size: 1.2rem;
-            color: rgba(255,255,255,0.8);
-            pointer-events: none;
-            text-shadow: 0 0 10px #fff;
+            color: var(--primary);
+            font-size: 1.1rem;
+            text-shadow: 0 0 10px var(--primary);
             animation: pulse 2s infinite;
+            pointer-events: none;
         }
 
-        .progress-container {
+        .c-star {
             position: absolute;
-            bottom: 50px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80%;
-            max-width: 300px;
-            height: 6px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        .progress-bar {
-            width: 0%;
-            height: 100%;
-            background: linear-gradient(90deg, #ff9ff3, #feca57);
-            transition: width 0.3s ease;
-            box-shadow: 0 0 10px #ff9ff3;
-        }
-
-        .collectible-star {
-            position: absolute;
-            width: 40px;
-            height: 40px;
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
             cursor: pointer;
-            filter: drop-shadow(0 0 10px gold);
-            animation: floatStar 3s infinite ease-in-out;
-            transition: transform 0.2s;
-            font-size: 24px;
-            text-align: center;
-            line-height: 40px;
-            user-select: none;
+            transition: all 0.3s;
+            opacity: 0.3;
+            box-shadow: 0 0 5px rgba(255,255,255,0.5);
         }
-        .collectible-star:active { transform: scale(1.5); }
 
-        /* --- 阶段三：心跳解锁 --- */
-        #stage-heartbeat {
+        /* 增大点击区域 */
+        .c-star::after {
+            content: '';
+            position: absolute;
+            top: -20px; left: -20px; right: -20px; bottom: -20px;
+        }
+
+        .c-star.active {
+            opacity: 1;
+            background: var(--gold);
+            box-shadow: 0 0 15px var(--gold), 0 0 30px var(--gold);
+            animation: starPulse 1s infinite alternate;
+            z-index: 10;
+            transform: translate(-50%, -50%) scale(1.5);
+        }
+
+        .c-star.done {
+            opacity: 1;
+            background: var(--primary);
+            box-shadow: 0 0 10px var(--primary);
+            animation: none;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .c-line {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(90deg, var(--gold), var(--primary));
+            transform-origin: left center;
+            opacity: 0;
+            transition: opacity 1s ease;
+            box-shadow: 0 0 8px var(--primary);
+            z-index: 1;
+        }
+
+        @keyframes starPulse { 
+            0% { transform: translate(-50%, -50%) scale(1.2); } 
+            100% { transform: translate(-50%, -50%) scale(1.8); } 
+        }
+
+        /* --- 场景3：心跳解锁 --- */
+        #scene-unlock {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             z-index: 80;
@@ -130,275 +176,230 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background: radial-gradient(circle, #2c0e18 0%, #000 100%);
+            background: #000;
         }
 
-        .lock-heart {
+        .heart-trigger {
             font-size: 80px;
             cursor: pointer;
-            transition: all 0.2s ease;
+            user-select: none;
             position: relative;
-            z-index: 2;
+            z-index: 10;
+            transition: transform 0.1s;
+            filter: drop-shadow(0 0 0px var(--primary));
         }
 
-        .lock-heart::after {
-            content: '👈 长按我注入能量';
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 16px;
-            white-space: nowrap;
-            margin-top: 20px;
-            color: rgba(255,255,255,0.6);
-            animation: fadeInUp 1s infinite alternate;
+        .unlock-hint {
+            margin-top: 30px;
+            color: rgba(255,255,255,0.5);
+            font-size: 14px;
+            animation: fadeInUp 2s infinite;
         }
 
-        .energy-ring {
+        .energy-circle {
             position: absolute;
-            width: 150px;
-            height: 150px;
-            border: 2px solid rgba(255, 105, 180, 0.3);
+            width: 120px;
+            height: 120px;
+            border: 2px solid var(--primary);
             border-radius: 50%;
-            transform: scale(0);
-            transition: transform 0.1s linear;
+            opacity: 0;
+            transform: scale(0.8);
         }
 
-        /* --- 阶段四：信封与正文 --- */
-        #stage-letter {
+        /* --- 场景4：信件内容 --- */
+        #scene-letter {
             position: relative;
             width: 100%;
             min-height: 100vh;
             display: none;
-            background: linear-gradient(135deg, #fff0f5 0%, #ffd1dc 100%);
+            background: linear-gradient(135deg, #fff0f5 0%, #ffe4e1 100%);
             overflow-y: auto;
-            color: #333;
-            padding-bottom: 50px;
-            animation: bgShift 10s infinite alternate;
+            color: #5d3a3a;
+            padding: 20px;
+            font-family: 'Ma Shan Zheng', cursive; /* 使用手写体 */
         }
 
-        @keyframes bgShift {
-            0% { background-position: 0% 50%; }
-            100% { background-position: 100% 50%; }
-        }
-
-        .envelope-wrapper {
+        .paper {
+            background: rgba(255, 255, 255, 0.95);
             max-width: 800px;
             margin: 40px auto;
-            background: rgba(255,255,255,0.9);
             padding: 40px;
             border-radius: 10px;
-            box-shadow: 0 10px 50px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 40px rgba(255, 105, 180, 0.2);
+            line-height: 2;
+            font-size: 18px;
             position: relative;
             opacity: 0;
-            transform: translateY(50px);
+            transform: translateY(30px);
             transition: all 1s ease;
         }
+        
+        .paper.show { opacity: 1; transform: translateY(0); }
 
-        .envelope-wrapper.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .letter-content {
-            font-family: 'KaiTi', '楷体', serif;
-            font-size: 1.2rem;
-            line-height: 1.8;
-            color: #5d3a3a;
-        }
-
-        .letter-title {
+        .paper-title {
             text-align: center;
-            font-size: 1.8rem;
+            font-size: 28px;
+            color: #d63384;
             margin-bottom: 30px;
-            color: #c0392b;
-            border-bottom: 2px solid #eebbba;
+            border-bottom: 2px dashed #ffb6c1;
             padding-bottom: 15px;
         }
 
-        .letter-footer {
-            text-align: right;
-            margin-top: 50px;
-            font-weight: bold;
-        }
-
-        .hint-text {
-            text-align: center;
-            margin-top: 30px;
-            color: #e84393;
-            font-size: 0.9rem;
-            background: #ffeaa7;
-            padding: 5px;
-            border-radius: 20px;
-            display: inline-block;
-        }
-
-        /* 装饰元素 */
-        .floating-heart {
+        /* 装饰飘落 */
+        .rain-heart {
             position: fixed;
             pointer-events: none;
-            z-index: 9999;
-            animation: floatUp 3s linear forwards;
+            z-index: 999;
+            top: 110%;
+            animation: floatUp linear forwards;
         }
+        @keyframes floatUp { to { transform: translateY(-120vh) rotate(360deg); opacity: 0; } }
+        @keyframes fadeInUp { 0% {opacity:0; transform:translateY(10px);} 100%{opacity:1; transform:translateY(0);} }
 
-        @keyframes floatUp {
-            0% { transform: translateY(0) scale(1); opacity: 1; }
-            100% { transform: translateY(-100vh) scale(1.5); opacity: 0; }
-        }
-
-        @keyframes pulse { 0% { opacity: 0.5; } 100% { opacity: 1; } }
-        @keyframes floatStar { 
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(180deg); }
-        }
-
-        #music-control {
+        /* 音乐按钮 */
+        #music-btn {
             position: fixed;
             top: 20px; right: 20px;
             z-index: 200;
+            width: 40px; height: 40px;
             background: rgba(255,255,255,0.2);
-            padding: 10px;
             border-radius: 50%;
-            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             backdrop-filter: blur(5px);
-            font-size: 24px;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.3);
         }
-
     </style>
 </head>
 <body>
 
-    <!-- 背景音乐 -->
-    <audio id="bgMusic" src="bgmusic.mp3" loop></audio>
-    <div id="music-control">🔇</div>
+    <audio id="bg-music" src="bgmusic.mp3" loop></audio>
+    <div id="music-btn">🎵</div>
 
-    <!-- 阶段一：倒计时 -->
-    <div id="stage-countdown">
-        <div class="countdown-box">
-            <h2>⏳ 距离封印解除还有</h2>
-            <div class="timer-display" id="timer">计算中...</div>
-            <p style="color: #aaa; font-size: 0.9rem;">目标日期：2025年12月10日</p>
-            <p style="margin-top: 20px; font-size: 12px; color: #555;">(嘘...还没到时候呢)</p>
+    <!-- 1. 倒计时 -->
+    <div id="scene-countdown">
+        <div class="stars-bg"></div>
+        <div class="countdown-wrapper">
+            <div class="countdown-title">Sealed Until</div>
+            <div class="timer-main" id="timer-val">2025.12.10</div>
+            <div class="timer-sub">等待那个时刻的到来...</div>
         </div>
     </div>
 
-    <!-- 阶段二：收集星光 -->
-    <div id="stage-collect">
-        <div class="instruction-text">✨ 四周太黑了<br>点击捕捉 5 个发光记忆碎片 ✨</div>
-        <div class="progress-container">
-            <div class="progress-bar" id="collect-bar"></div>
+    <!-- 2. 天蝎座连线 -->
+    <div id="scene-constellation">
+        <div class="game-area" id="constellation-area">
+            <div class="guide-text">按顺序点亮属于你的星空 (0/20)</div>
+            <!-- 星星由JS生成 -->
         </div>
-        <!-- 碎片会通过JS动态生成 -->
     </div>
 
-    <!-- 阶段三：心跳注入 -->
-    <div id="stage-heartbeat">
-        <div class="lock-heart" id="heart-btn">🖤</div>
-        <div class="energy-ring" id="energy-ring"></div>
+    <!-- 3. 心跳解锁 -->
+    <div id="scene-unlock">
+        <div class="heart-trigger" id="unlock-heart">🖤</div>
+        <div class="energy-circle" id="energy-circle"></div>
+        <div class="unlock-hint">长按注入爱意，会有神奇的事情发生...</div>
     </div>
 
-    <!-- 阶段四：信件内容 -->
-    <div id="stage-letter">
-        <div class="envelope-wrapper" id="main-letter">
-            <div class="letter-title">🌚 致——唐欣 🌚</div>
-            <div class="letter-content">
+    <!-- 4. 信件 -->
+    <div id="scene-letter">
+        <div class="paper" id="letter-paper">
+            <div class="paper-title">🌚 致——唐欣 🌚</div>
+            <div id="letter-content">
+                <!-- 原文内容保持不变 -->
                 <p>亲爱的阿欣:</p>
                 <br>
                 <p>嗨～又是一年10月21日了，今天，是屬於妳的特別日子。先跟妳說聲最重要的：生日快樂🎂！</p>
-                <br>
                 <p>這封信，其實我準備了很久，因為我真的很想好好把心裡想說的話全部寫下來，不只是為了祝福妳生日快樂，更是想在這個特別的時刻，把這一年來對妳的感謝、思念、關心，以及那些藏在日常裡的小情緒，都一一寫給妳。因為妳值得，妳值得這世界上最溫柔、最長情的祝福。</p>
                 <br>
                 <p>我是邱子怡，這是我陪妳過的第一個生日。謝謝妳對我的喜歡與愛，我也想告訴妳，我也喜歡妳，我也愛妳。</p>
-                <br>
                 <p>妳就像一段美麗又珍貴的旋律，在我心中留下了永遠的餘韻。每次想到妳，都像春日午後的陽光照進心裡，有點溫暖、有點懷念，也有點捨不得。</p>
-                <br>
                 <p>妳說我是妳人生中的驚喜，但我總笑說，我也有可能是驚嚇，妳總是笑得好開心，像這一切都值得被記得一輩子。</p>
                 <br>
                 <p>但我知道，我們無法永遠停留在這段情感裡。或許未來的人生，還有各自更重要的責任與方向，也許有更多的現實考量，讓我們無法像曾經那樣靠近。也許我們之間的這段情感，本來就是一場美麗但短暫的交會。</p>
-                <br>
                 <p>比起一直牽掛，我更希望妳可以慢慢學會放下，慢慢學會把愛收回來一點，重新把重心放回自己的生活。</p>
                 <br>
                 <p>阿欣，這一年裡，我知道妳並不總是順利。有的時候妳會覺得很累，有的時候會想逃避，有时候甚至會懷疑自己到底能不能堅持下去。但妳知道嗎？每次看到妳還是努力撐著、還是默默把事情做完的樣子，我都好心疼，也好佩服。因為我知道，那不是因為妳不累，而是因為妳真的很堅強。是那種真正內心溫柔的人，才會有的堅強。</p>
-                <br>
                 <p>我真的很希望，妳不要再那麼委屈自己了。妳已經夠好了，真的。妳做得比大多數人都還要努力，還要認真。妳總是顧慮別人的感受，為了不讓別人失望，常常犧牲自己。可是阿欣，妳也是人啊，妳也會累、會痛、會想哭。所以，以後請妳也多為自己想一點，好嗎？妳也值得被照顧、被疼愛、被溫柔以待。</p>
                 <br>
                 <p>有的時候，我會幻想，如果今天我在妳身邊，我會怎麼為妳慶生。也許是一起去吃一頓簡單又好吃的晚餐，也許是買一束妳喜歡的花，也許是我親手做的小蛋糕。然後我們可以在路邊慢慢散步，聊聊這一年來發生的事，聽妳講那些妳不好意思對別人說的心事。或者我們什麼都不說，就這樣並肩走著，也很好。</p>
                 <br>
                 <p>但現在，我只能隔著一片海，透過這封信，把這些畫面寫給妳看。嘻嘻，雖然距離遠了一點，但我的心一直都在妳那邊。每當我想到妳現在在忙些什麼，有沒有好好吃飯、有沒有好好休息，我都會忍不住默默為妳祈禱，希望妳一切都好，平安健康。</p>
-                <br>
                 <p>妳知道嗎？我一直覺得，妳是一道光。不是那種很耀眼、很刺眼的光，而是像黃昏時分斜照進房間的那種光，柔柔的、暖暖的、靜靜地陪著人。妳總是默默地給人安慰，給人力量，卻從來不誇耀自己。妳用自己的方式，影響著身邊的人，讓人忍不住想更靠近妳一點，想更了解妳一點。</p>
                 <br>
                 <p>我知道妳不太喜歡成為焦點，妳總是習慣把別人放在前面，把自己放在最後。但在今天，在妳的生日這一天，我希望妳可以勇敢地把自己放在第一位。好好寵愛自己、好好放鬆一下。買一杯妳喜歡的果茶、聽一首妳喜歡的歌、或者去一個妳想去的地方。不需要太多理由，因為今天是妳的日子。</p>
-                <br>
                 <p>阿欣，我真的好希望妳能一直快快樂樂的。不是那種表面上的笑，而是發自內心的開心。那種從早上醒來就覺得「啊今天真不錯」的感覺，那種走在路上都會莫名想哼歌的開心。希望妳能有很多很多這樣的日子，累積成一個閃閃發光的人生。</p>
                 <br>
                 <p>我也想告訴妳，未來無論妳遇到什麼事，都不要忘記自己有多棒。妳是值得被愛的、被肯定的。那些妳努力過、撐過來的每一段日子，都是妳生命中最珍貴的寶藏。就算別人看不見，妳自己也要記得，自己有多麼努力、多麼堅強。</p>
-                <br>
                 <p>我希望從今天開始，妳可以記得我、想念我，也可以把這份愛轉回自己身上，好好疼惜妳自己，好好愛自己。</p>
                 <br>
                 <p>有時候我們會懷疑自己，會問「我這樣夠好嗎？」「我是不是不夠聰明、不夠努力、不夠厲害？」但其實，那些標準根本不重要。妳只要活成妳喜歡的樣子，就已經很棒了。世界上沒有第二個妳，所以妳本身就是稀一無二的存在。</p>
                 <br>
                 <p>最後，我想跟妳說一個願望。這是我每年都會在妳生日那天偷偷許的願望：願妳一生平安、健康、快樂，身邊有人疼、心裡有夢想、眼裡有光。願妳不再為過去難過，也不為未來擔心。願妳不管到哪裡，都能做自己、愛自己。</p>
-                <br>
                 <p>阿欣，謝謝妳出現在我的世界裡。雖然我們的故事可能不像電影一樣轟轟烈烈，但卻是真實而溫暖的存在。未來的日子裡，我還是會繼續默默地在遠方祝福妳。</p>
                 <br>
                 <p>願我們都能成為更好的人，在各自的生活裡發光發熱。有一天，如果命運安排我們再相遇，希望我們都還記得彼此。</p>
                 <br>
                 <p>祝我最親愛的阿欣，生日快樂。</p>
-
-                <div class="letter-footer">
+                
+                <div style="text-align: right; margin-top: 40px;">
                     <p>💖 愛你的子怡</p>
                     <p>🌹 2025年12月10日</p>
                 </div>
-
-                <div style="text-align: center; margin-top: 50px;">
-                    <span class="hint-text">🤫 試試長按鍵盤 'L' 鍵，有魔法哦~</span>
+                
+                <div style="text-align: center; margin-top: 50px; font-size: 0.9em; color: #d63384;">
+                    ( 试着在键盘上长按 'L' 键... )
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // 配置日期
+        /* 
+           配置区 
+           测试模式：在网址后加 ?test=true 即可跳过倒计时直接看效果
+        */
         const TARGET_DATE = new Date('2025-12-10T00:00:00+08:00');
-        // 后门，方便你测试，在网址后面加 ?test=true 即可跳过倒计时
-        const isTestMode = new URLSearchParams(window.location.search).get('test') === 'true';
+        const IS_TEST = new URLSearchParams(window.location.search).get('test') === 'true';
 
-        // 元素引用
-        const elTimer = document.getElementById('timer');
-        const stageCountdown = document.getElementById('stage-countdown');
-        const stageCollect = document.getElementById('stage-collect');
-        const stageHeartbeat = document.getElementById('stage-heartbeat');
-        const stageLetter = document.getElementById('stage-letter');
-        const musicBtn = document.getElementById('music-control');
-        const bgMusic = document.getElementById('bgMusic');
-
-        // 状态变量
-        let collectedCount = 0;
-        const totalToCollect = 5;
-
+        // 状态管理
+        let currentScene = 1;
+        
         // 初始化
         function init() {
             checkTimer();
             setInterval(checkTimer, 1000);
             
             // 音乐控制
-            musicBtn.addEventListener('click', toggleMusic);
+            const musicBtn = document.getElementById('music-btn');
+            const audio = document.getElementById('bg-music');
+            musicBtn.addEventListener('click', () => {
+                if(audio.paused) {
+                    audio.play();
+                    musicBtn.textContent = '🔊';
+                } else {
+                    audio.pause();
+                    musicBtn.textContent = '🔇';
+                }
+            });
+            // 尝试自动播放
             document.body.addEventListener('click', () => {
-                if(bgMusic.paused) toggleMusic();
-            }, {once: true});
+                if(audio.paused) { audio.play().catch(()=>{}); musicBtn.textContent = '🔊'; }
+            }, {once:true});
         }
 
-        // 1. 倒计时逻辑
+        /* 场景1：倒计时逻辑 */
         function checkTimer() {
+            if (currentScene !== 1) return;
+
             const now = new Date();
             const diff = TARGET_DATE - now;
 
-            if (diff <= 0 || isTestMode) {
-                if (stageCountdown.style.display !== 'none') {
-                    elTimer.innerHTML = "00 天 00 时 00 分 00 秒";
-                    setTimeout(startStageTwo, 1000); // 倒计时结束后进入第二阶段
-                }
+            if (diff <= 0 || IS_TEST) {
+                switchScene(2);
+                initConstellationGame();
                 return;
             }
 
@@ -406,188 +407,244 @@
             const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
             const m = Math.floor((diff / 1000 / 60) % 60);
             const s = Math.floor((diff / 1000) % 60);
-            elTimer.innerHTML = `${d}天 ${h}时 ${m}分 ${s}秒`;
+            
+            // 更优雅的显示方式
+            document.getElementById('timer-val').innerHTML = 
+                `${d}<span style="font-size:0.4em">d</span> ${h}<span style="font-size:0.4em">h</span> ${m}<span style="font-size:0.4em">m</span> ${s}<span style="font-size:0.4em">s</span>`;
         }
 
-        // 2. 开启第二阶段：收集碎片
-        function startStageTwo() {
-            stageCountdown.classList.add('hidden');
-            setTimeout(() => stageCountdown.style.display = 'none', 1000);
-            
-            stageCollect.style.display = 'block';
-            stageCollect.classList.add('fade-in');
-            spawnCollectible();
-        }
-
-        // 生成可收集的星星
-        function spawnCollectible() {
-            if (collectedCount >= totalToCollect) {
-                finishStageTwo();
-                return;
-            }
-            
-            const star = document.createElement('div');
-            star.className = 'collectible-star';
-            const symbols = ['✨', '⭐', '💫', '🌟', '🌕'];
-            star.textContent = symbols[Math.floor(Math.random() * symbols.length)];
-            
-            // 随机位置
-            const x = Math.random() * (window.innerWidth - 100) + 50;
-            const y = Math.random() * (window.innerHeight - 200) + 100;
-            
-            star.style.left = x + 'px';
-            star.style.top = y + 'px';
-            
-            star.addEventListener('click', (e) => {
-                e.stopPropagation();
-                collectItem(star);
+        function switchScene(sceneNum) {
+            currentScene = sceneNum;
+            document.querySelectorAll('body > div[id^="scene-"]').forEach(el => {
+                el.classList.add('hidden');
+                setTimeout(() => el.style.display = 'none', 1000);
             });
-            
-            stageCollect.appendChild(star);
-        }
 
-        function collectItem(el) {
-            el.style.transform = "scale(2) rotate(360deg)";
-            el.style.opacity = "0";
-            setTimeout(() => el.remove(), 300);
+            const next = document.getElementById(
+                sceneNum === 2 ? 'scene-constellation' : 
+                sceneNum === 3 ? 'scene-unlock' : 'scene-letter'
+            );
             
-            collectedCount++;
-            const pct = (collectedCount / totalToCollect) * 100;
-            document.getElementById('collect-bar').style.width = pct + '%';
-            
-            // 播放一个小音效或震动
-            if(navigator.vibrate) navigator.vibrate(50);
-            
-            spawnCollectible();
-        }
-
-        function finishStageTwo() {
-            document.querySelector('.instruction-text').innerHTML = "记忆碎片收集完毕...<br>正在重聚时光...";
             setTimeout(() => {
-                stageCollect.classList.add('hidden');
-                setTimeout(() => {
-                    stageCollect.style.display = 'none';
-                    startStageThree();
-                }, 1000);
-            }, 1500);
-        }
-
-        // 3. 开启第三阶段：心跳注入
-        let heartPressTimer;
-        let heartScale = 1;
-        
-        function startStageThree() {
-            stageHeartbeat.style.display = 'flex';
-            stageHeartbeat.classList.add('fade-in');
-            
-            const btn = document.getElementById('heart-btn');
-            const ring = document.getElementById('energy-ring');
-            
-            // 鼠标/手指按下
-            const startPress = (e) => {
-                e.preventDefault();
-                btn.textContent = '💖';
-                btn.style.color = '#ff69b4';
-                heartPressTimer = setInterval(() => {
-                    heartScale += 0.05;
-                    btn.style.transform = `scale(${heartScale})`;
-                    ring.style.transform = `scale(${heartScale * 1.5})`;
-                    ring.style.borderColor = `rgba(255, 105, 180, ${heartScale/5})`;
-                    
-                    if (navigator.vibrate) navigator.vibrate(20);
-
-                    if (heartScale > 3) {
-                        clearInterval(heartPressTimer);
-                        unlockFinalLetter();
-                    }
-                }, 100);
-            };
-
-            // 松开
-            const endPress = () => {
-                clearInterval(heartPressTimer);
-                heartScale = 1;
-                btn.style.transform = `scale(1)`;
-                btn.textContent = '🖤';
-                btn.style.color = 'white';
-                ring.style.transform = `scale(0)`;
-            };
-
-            btn.addEventListener('mousedown', startPress);
-            btn.addEventListener('touchstart', startPress);
-            
-            btn.addEventListener('mouseup', endPress);
-            btn.addEventListener('mouseleave', endPress);
-            btn.addEventListener('touchend', endPress);
-        }
-
-        function unlockFinalLetter() {
-            stageHeartbeat.style.transition = 'all 1s ease';
-            stageHeartbeat.style.opacity = '0';
-            stageHeartbeat.style.transform = 'scale(2)';
-            
-            // 切换背景到粉色
-            document.body.style.background = '#fff0f5';
-            document.body.style.overflow = 'auto'; // 允许滚动
-
-            setTimeout(() => {
-                stageHeartbeat.style.display = 'none';
-                stageLetter.style.display = 'block';
-                
-                setTimeout(() => {
-                    document.getElementById('main-letter').classList.add('visible');
-                    // 自动播放撒花特效
-                    triggerConfetti();
-                }, 500);
+                next.style.display = sceneNum === 3 ? 'flex' : 'block';
+                next.classList.remove('hidden');
+                next.classList.add('fade-in');
             }, 800);
         }
 
-        // 4. 信件阶段的 L 键彩蛋
-        let rainInterval;
+        /* 场景2：天蝎座连线游戏 */
+        function initConstellationGame() {
+            const container = document.getElementById('constellation-area');
+            const guide = document.querySelector('.guide-text');
+            
+            // 20颗星的相对坐标 (0-100%)，大致模拟天蝎座形状
+            const stars = [
+                {x: 20, y: 30}, {x: 25, y: 35}, {x: 30, y: 40}, // 左钳
+                {x: 70, y: 25}, {x: 65, y: 30}, {x: 60, y: 35}, // 右钳
+                {x: 45, y: 45}, // 头部
+                {x: 45, y: 55}, {x: 45, y: 65}, {x: 45, y: 75}, // 身体
+                {x: 50, y: 80}, {x: 55, y: 82}, {x: 60, y: 80}, {x: 65, y: 75}, // 尾巴弯曲
+                {x: 68, y: 65}, {x: 65, y: 55}, // 尾巴上翘
+                {x: 60, y: 50}, {x: 55, y: 45}, // 毒针连接
+                {x: 50, y: 40}, {x: 45, y: 35}  // 毒针尖端
+            ];
+            
+            // 重新映射点击顺序，让其连线合理 (左钳->头->右钳->头->身->尾)
+            // 简化逻辑：直接按数组顺序连，所以我重新排列数组顺序以形成一条线
+            const orderedStars = [
+                // 左钳子开始
+                {x: 20, y: 30}, {x: 25, y: 35}, {x: 30, y: 40},
+                // 头部
+                {x: 45, y: 45},
+                // 去右钳子 (需要处理分叉，这里为了简化游戏体验，做成单笔画视觉)
+                {x: 60, y: 35}, {x: 65, y: 30}, {x: 70, y: 25},
+                // 回到身体 (视觉跳跃，或者直接连身体)
+                {x: 45, y: 55}, {x: 48, y: 62}, {x: 50, y: 70}, 
+                {x: 55, y: 75}, {x: 62, y: 78}, {x: 70, y: 75}, // 尾巴弯曲
+                {x: 75, y: 65}, {x: 72, y: 55}, {x: 65, y: 48}, // 向上翘
+                {x: 60, y: 45}, {x: 55, y: 42}, {x: 50, y: 40}, {x: 45, y: 38} // 毒针
+            ];
+
+            let currentIndex = 0;
+
+            orderedStars.forEach((pos, index) => {
+                const star = document.createElement('div');
+                star.className = 'c-star';
+                star.style.left = pos.x + '%';
+                star.style.top = pos.y + '%';
+                star.dataset.index = index;
+                
+                star.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (index === currentIndex) {
+                        handleStarClick(star, index);
+                    }
+                });
+                container.appendChild(star);
+            });
+
+            // 激活第一颗
+            activateStar(0);
+
+            function activateStar(idx) {
+                const s = container.querySelector(`.c-star[data-index="${idx}"]`);
+                if(s) s.classList.add('active');
+            }
+
+            function handleStarClick(el, idx) {
+                el.classList.remove('active');
+                el.classList.add('done');
+                
+                // 震动反馈
+                if(navigator.vibrate) navigator.vibrate(20);
+
+                // 画线
+                if (idx > 0) {
+                    const prev = orderedStars[idx-1];
+                    const curr = orderedStars[idx];
+                    drawLine(prev, curr);
+                }
+
+                guide.textContent = `点亮星空 (${idx+1}/20)`;
+                currentIndex++;
+
+                if (currentIndex < 20) {
+                    activateStar(currentIndex);
+                } else {
+                    guide.textContent = "天蝎座 · 唤醒成功";
+                    setTimeout(() => {
+                        switchScene(3);
+                        initHeartInteraction();
+                    }, 1500);
+                }
+            }
+
+            function drawLine(p1, p2) {
+                // 计算两点间距离和角度
+                // 注意：因为是百分比，这里简单处理，假设容器大概比例
+                // 为了准确，获取实际像素
+                const w = container.offsetWidth;
+                const h = container.offsetHeight;
+                
+                const x1 = p1.x * w / 100;
+                const y1 = p1.y * h / 100;
+                const x2 = p2.x * w / 100;
+                const y2 = p2.y * h / 100;
+
+                const length = Math.sqrt((x2-x1)**2 + (y2-y1)**2);
+                const angle = Math.atan2(y2-y1, x2-x1) * 180 / Math.PI;
+
+                const line = document.createElement('div');
+                line.className = 'c-line';
+                line.style.width = length + 'px';
+                line.style.left = x1 + 'px';
+                line.style.top = y1 + 'px';
+                line.style.transform = `rotate(${angle}deg)`;
+                
+                container.appendChild(line);
+                setTimeout(() => line.style.opacity = 1, 50);
+            }
+        }
+
+        /* 场景3：心跳解锁 (长按特效) */
+        function initHeartInteraction() {
+            const heartBtn = document.getElementById('unlock-heart');
+            const circle = document.getElementById('energy-circle');
+            let pressTimer;
+            let rainInterval;
+            let progress = 0;
+
+            const startPress = (e) => {
+                e.preventDefault();
+                heartBtn.textContent = '💖';
+                heartBtn.style.filter = 'drop-shadow(0 0 10px #ff69b4)';
+                
+                // 长按时，立即开始下雨
+                createHeartRain(true); 
+                rainInterval = setInterval(() => createHeartRain(true), 100); // 频率加快
+
+                pressTimer = setInterval(() => {
+                    progress += 2;
+                    const scale = 1 + (progress / 50);
+                    
+                    heartBtn.style.transform = `scale(${scale})`;
+                    circle.style.opacity = progress / 100;
+                    circle.style.transform = `scale(${scale * 1.2})`;
+                    circle.style.boxShadow = `0 0 ${progress}px var(--primary)`;
+
+                    if (progress >= 100) {
+                        clearInterval(pressTimer);
+                        clearInterval(rainInterval);
+                        completeUnlock();
+                    }
+                }, 50);
+            };
+
+            const endPress = (e) => {
+                e.preventDefault();
+                clearInterval(pressTimer);
+                clearInterval(rainInterval);
+                progress = 0;
+                heartBtn.textContent = '🖤';
+                heartBtn.style.transform = 'scale(1)';
+                heartBtn.style.filter = 'none';
+                circle.style.opacity = 0;
+                circle.style.transform = 'scale(0.8)';
+            };
+
+            heartBtn.addEventListener('mousedown', startPress);
+            heartBtn.addEventListener('touchstart', startPress);
+            heartBtn.addEventListener('mouseup', endPress);
+            heartBtn.addEventListener('touchend', endPress);
+            heartBtn.addEventListener('mouseleave', endPress);
+        }
+
+        function completeUnlock() {
+            const scene = document.getElementById('scene-unlock');
+            scene.style.transition = 'all 1s ease';
+            scene.style.opacity = 0;
+            scene.style.transform = 'scale(1.5)';
+            
+            // 背景变亮
+            document.body.style.background = '#ffe4e1';
+            
+            setTimeout(() => {
+                switchScene(4);
+                document.getElementById('letter-paper').classList.add('show');
+                // 爆发一次大雨
+                for(let i=0; i<30; i++) setTimeout(() => createHeartRain(), i*50);
+            }, 800);
+        }
+
+        /* 通用：爱心雨 */
+        function createHeartRain(isFast = false) {
+            const heart = document.createElement('div');
+            heart.className = 'rain-heart';
+            heart.innerText = ['💗','💖','💕','💘','💝'][Math.floor(Math.random()*5)];
+            heart.style.left = Math.random() * 100 + 'vw';
+            heart.style.fontSize = (Math.random() * 20 + 15) + 'px';
+            // 长按时雨下得更快
+            const duration = isFast ? (Math.random() * 1 + 1) : (Math.random() * 3 + 2);
+            heart.style.animation = `floatUp ${duration}s linear forwards`;
+            
+            document.body.appendChild(heart);
+            setTimeout(() => heart.remove(), duration * 1000);
+        }
+
+        /* L键彩蛋 */
+        let lKeyInterval;
         document.addEventListener('keydown', (e) => {
-            if ((e.key === 'l' || e.key === 'L') && !rainInterval) {
+            if ((e.key === 'l' || e.key === 'L') && !lKeyInterval) {
                 createHeartRain();
-                rainInterval = setInterval(createHeartRain, 100);
+                lKeyInterval = setInterval(() => createHeartRain(), 100);
             }
         });
-
         document.addEventListener('keyup', (e) => {
             if (e.key === 'l' || e.key === 'L') {
-                clearInterval(rainInterval);
-                rainInterval = null;
+                clearInterval(lKeyInterval);
+                lKeyInterval = null;
             }
         });
-        
-        // 移动端长按 L 区域模拟 (为了手机也能玩)
-        // 这里简化处理：任何长按文字区域都可能触发一点点
-        
-        function createHeartRain() {
-            const heart = document.createElement('div');
-            heart.classList.add('floating-heart');
-            heart.innerHTML = ['💗','💖','💕','💓','🫶'][Math.floor(Math.random()*5)];
-            heart.style.left = Math.random() * 100 + 'vw';
-            heart.style.bottom = '-50px';
-            heart.style.fontSize = (Math.random() * 20 + 20) + 'px';
-            heart.style.animationDuration = (Math.random() * 2 + 2) + 's';
-            document.body.appendChild(heart);
-            setTimeout(() => heart.remove(), 4000);
-        }
-
-        function triggerConfetti() {
-            for(let i=0; i<30; i++) {
-                setTimeout(() => createHeartRain(), i * 100);
-            }
-        }
-
-        function toggleMusic() {
-            if (bgMusic.paused) {
-                bgMusic.play();
-                musicBtn.textContent = '🔊';
-            } else {
-                bgMusic.pause();
-                musicBtn.textContent = '🔇';
-            }
-        }
 
         init();
 
